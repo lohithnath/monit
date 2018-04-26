@@ -1,0 +1,20 @@
+############################################################################################################################################################
+#monit chechking
+
+# set httpd port 2812 and
+#    allow localhost
+#    allow admin:monit
+#    allow 0.0.0.0/0
+
+ check process tomcat-service with pidfile /opt/tomcat/temp/tomcat.pid
+    start program = /usr/sbin/service apache2 start
+    stop program  = /usr/sbin/service apache2 stop
+    if failed (url http://192.168.11.241 and content != "502") then restart
+    if failed (url http://192.168.11.241 and content != "503") then restart
+    if failed host 192.168.11.241 port 8080 protocol http then restart
+
+ check process http-service with pidfile /var/run/apache2/apache2.pid
+    start program = /usr/sbin/service apache2 start
+    stop program  = /usr/sbin/service apache2 stop
+    if failed host 192.168.11.241 port 80 protocol http then restart
+

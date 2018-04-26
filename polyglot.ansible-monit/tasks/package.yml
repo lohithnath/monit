@@ -1,0 +1,16 @@
+---
+- name: installing monit
+  yum: name={{ item }} state=present
+  with_items:
+      - monit
+      - httpd 
+  when: ansible_os_family == "RedHat" 
+
+- name: installing monit
+  package: name={{ item }} state=present
+  with_items:
+      - python-apt
+      - monit
+      - apache2
+  when: ansible_os_family == "Debian"
+  

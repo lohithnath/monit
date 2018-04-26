@@ -1,0 +1,65 @@
+---
+ - name: installing required tools for compilation 
+   package: name="{{ item }}" state=present 
+   with_items:
+       - epel-release 
+       - autoconf 
+       - expat-devel 
+       - libtool  
+       - libnghttp2-devel  
+       - pcre-devel
+       - openssl-devel
+
+ - name: downloading apr
+   get_url: url="{{ apr_url }}" dest=/opt
+
+ - name: downloading apr-utils
+   get_url: url="{{ apr_util_url }}" dest=/opt
+
+ - name: extracting apr 
+   unarchive: src=/opt/apr-{{ apr_version }}.tar.gz dest=/opt remote_src=yes
+
+ - name: extracting apr-utils
+   unarchive: src=/opt/apr-util-{{ apr_util_version }}.tar.gz dest=/opt/ remote_src=yes
+
+ - name: getting the compiled code
+   get_url: url="{{ httpd_url }}" dest=/root
+
+ - name: extracting the tar file
+   unarchive: src=/root/httpd-{{ httpd_version }}.tar.gz dest=/root/ remote_src=yes
+
+# - name: creating apr directory
+#   file: path=/opt/httpd-{{ httpd_version }}/srclib/apr state=directory
+
+# - name: creating apr-util directory
+#   file: path=/opt/httpd-{{ httpd_version }}/srclib/apr-util state=directory
+
+ - name: copying apr 
+   command: scp -r /opt/apr-{{ apr_version }} /root/httpd-{{ httpd_version }}/srclib/apr 
+
+ - name: copying apr util
+   command: scp -r /opt/apr-util-{{ apr_util_version }} /root/httpd-{{ httpd_version }}/srclib/apr-util
+
+ - name: changing directory to httpd
+   command: chdir=/root/httpd-{{ httpd_version }} {{ item }}
+   with_items:
+       - ./buildconf
+       - ./configure --enable-ssl --enable-so --enable-http2 --with-mpm=event --with-included-apr --with-ssl=/usr/local/openssl --prefix=/usr/local/apache2
+       - make
+       - make install
+ 
+ - name: adding executables to paths
+   template: src=httpd.sh.j2 dest=/etc/profile.d/httpd.sh
+
+ - name: adding systemd entry for service
+   template: src=httpd.service.j2 dest=/etc/systemd/system/httpd.service
+
+ - name: starting daemon
+   service: name=daemon-reload
+ 
+ - name: stopping firewalld 
+   service: name=firewalld state=stopped
+
+ - name: starting httpd service 
+   service: name=httpd state=started enabled=yes 
+ 

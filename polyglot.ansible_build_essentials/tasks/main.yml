@@ -1,0 +1,30 @@
+---
+# tasks file for polyglot.ansible_build-essentials
+ - name: installing required tools for compilation
+   package: name="{{ item }}" state=present
+   with_items:
+       - autoconf
+       - expat-devel
+       - libtool
+       - libnghttp2-devel
+       - pcre-devel
+       - openssl-devel
+   when: ansible_os_family == "RedHat"
+
+ - name: installing required tools for compilation
+   package: name="{{ item }}" state=present
+   with_items:
+       - build-essential
+       - libtool
+       - libnghttp2-dev
+   when: ansible_os_family == "Debian"
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,27 @@
+---
+# handlers file for polyglot.ansible-monit
+
+ - name: starting the monit service
+   service: name=monit state=started enabled=yes
+   when: ansible_os_family == "RedHat"
+
+ - name: starting the monit service
+   service: name=monit state=started enabled=yes
+   when: ansible_os_family == "Debian"
+ 
+ - name: starting httpd service 
+   service: name=httpd state=started 
+   when: ansible_os_family == "RedHat"
+   
+ - name: starting apache2 service
+   service: name=apache2 state=started 
+   when: ansible_os_family == "Debian"
+
+ - name: restarting monit service
+   service: name=monit state=restarted
+   when: ansible_os_family == "RedHat"
+
+ - name: restarting monit service
+   service: name=monit state=restarted
+   when: ansible_os_family == "Debian"
+ 

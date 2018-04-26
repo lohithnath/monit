@@ -1,0 +1,42 @@
+---
+ - name: installing epel-release
+   include_role: name=polyglot.ansible_epel
+
+ - name: installing monit package
+   import_tasks: package.yml
+   notify: starting the monit service
+
+ - name: creating template to monit config file
+   template: src=monitrc.j2 dest=/etc/monitrc
+   when: ansible_os_family == "RedHat"
+#   when: ansible_distribution == 'CentOS' and ansible_distribution_version == '7.4'
+
+ - name: creating file under monit.d in centos7
+   template: src=tadaayrc.j2 dest=/etc/monit.d/tadaayrc 
+   when: ansible_os_family == "RedHat"
+#   when: ansible_distribution == 'CentOS' and ansible_distribution_version == '7.4'
+   notify: restarting monit service
+   
+ - name: creating template to centos6 monit config file
+   template: src=monit.conf.j2 dest=/etc/monit.conf
+   when: ansible_os_family == "RedHat"
+#   when: ansible_distribution == 'CentOS' and ansible_distribution_version == '4.9'
+
+ - name: creating template under monit.d in centos6
+   template: src=centos6rc.j2 dest=/etc/monit.d/centos6rc
+   when: ansible_os_family == "RedHat"
+#   when: ansible_distribution == 'CentOS' and ansible_distribution_version == '4.9'
+   notify: restarting monit service
+
+ - name: creating template to ubuntu monit config file
+   template: src=monitrc.j2 dest=/etc/monit/monitrc
+   when: ansible_os_family == "Debian"
+
+ - name: creating file under conf.d in ubuntu
+   template: src=ubunturc.j2 dest=/etc/monit/conf.d/ubunturc
+   when: ansible_os_family == "Debian"
+   notify: restarting monit service
+
+ 
+
+

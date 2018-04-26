@@ -1,0 +1,15 @@
+---
+# defaults file for httpd
+install_method: source
+
+openssl_version: 1.0.0a
+openssl_url:  http://www.openssl.org/source/openssl-1.0.0a.tar.gz
+
+apr_version: 1.6.3
+apr_url: http://redrockdigimark.com/apachemirror/apr/apr-{{ apr_version }}.tar.gz
+
+apr_util_version: 1.6.1
+apr_util_url: http://redrockdigimark.com/apachemirror/apr/apr-util-{{ apr_util_version }}.tar.gz
+
+httpd_version: 2.4.29
+httpd_url: http://redrockdigimark.com/apachemirror/httpd/httpd-{{ httpd_version }}.tar.gz

@@ -1,0 +1,86 @@
+---
+ - name: installing epel-release
+   include_role: name=polyglot.ansible_epel
+
+ - name: installing build essentials
+   include_role: name=polyglot.ansible_build_essentials 
+
+ - name: compiling openssl source code for ubuntu
+   get_url: url="{{ openssl_url }}" dest=/opt
+   when: ansible_os_family == "Debian"
+ 
+ - name: extracting openssl source file for ubuntu
+   unarchive: src=/opt/openssl-{{ openssl_version }}.tar.gz dest=/opt remote_src=yes
+   when: ansible_os_family == "Debian"
+
+ - name: downloading apr
+   get_url: url="{{ apr_url }}" dest=/opt
+
+ - name: downloading apr-utils
+   get_url: url="{{ apr_util_url }}" dest=/opt
+
+ - name: extracting apr 
+   unarchive: src=/opt/apr-{{ apr_version }}.tar.gz dest=/opt remote_src=yes
+
+ - name: extracting apr-utils
+   unarchive: src=/opt/apr-util-{{ apr_util_version }}.tar.gz dest=/opt/ remote_src=yes
+
+ - name: getting the compiled code
+   get_url: url="{{ httpd_url }}" dest=/opt
+
+ - name: extracting the tar file
+   unarchive: src=/opt/httpd-{{ httpd_version }}.tar.gz dest=/opt/ remote_src=yes
+
+ - name: copying apr 
+   command: scp -r /opt/apr-{{ apr_version }}/ /opt/httpd-{{ httpd_version }}/srclib/apr/ 
+
+ - name: copying apr util
+   command: scp -r /opt/apr-util-{{ apr_util_version }}/ /opt/httpd-{{ httpd_version }}/srclib/apr-util/ 
+
+ - name: changing directory to httpd
+   command: chdir=/opt/httpd-{{ httpd_version }} {{ item }}
+   with_items:
+      - ./buildconf
+      - ./configure --enable-ssl --enable-so --enable-http2 --with-mpm=event --with-included-apr --with-ssl=/usr/local/openssl --prefix=/usr/local/apache2
+      - make
+      - make install
+   when: ansible_os_family == "RedHat"
+
+ - name: changing directory to openssl for ubuntu
+   command: chdir=/opt/openssl-{{ openssl_version }} {{ item }}
+   with_items: 
+       - make clean
+       - ./config --prefix=/usr/local/apache2
+       - make
+       - make install
+   when: ansible_os_family == "Debian"
+
+ - name: changing directory to httpd in ubuntu
+   command: chdir=/opt/httpd-{{ httpd_version }} {{ item }}
+   with_items:
+      - ./configure --enable-ssl --enable-so --enable-http2 --with-mpm=event --with-included-apr --with-ssl=/usr/local/openssl --prefix=/usr/local/apache2
+      - make
+      - make install
+   when: ansible_os_family == "Debian"
+
+ - name: adding executables to paths
+   template: src=httpd.sh.j2 dest=/etc/profile.d/httpd.sh
+   when: ansible_os_family == "RedHat"
+
+ - name: adding systemd entry for service
+   template: src=httpd.service.j2 dest=/etc/systemd/system/httpd.service
+   notify: reloading of daemon
+   when: ansible_os_family == "RedHat"
+
+ - name: stoping firewalld
+   service: name=firewalld state=stopped
+   when: ansible_os_family == "RedHat"
+
+ - name: starting httpd service 
+   service: name=httpd state=started enabled=yes
+   when: ansible_os_family == "RedHat"
+
+ - name: starting apache2 in ubuntu
+   command: /usr/local/apache2/bin/apachectl -k start
+   when: ansible_os_family == "Debian"  
+ 
